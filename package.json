@@ -1,0 +1,32 @@
+{
+  "name": "blog-aggregator-ts",
+  "version": "1.0.0",
+  "description": "https://www.boot.dev/lessons/4d624835-9830-4ca6-bfbb-280112f64baf",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch ./src/index.ts",
+    "start": "tsx ./src/index.ts"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gpavlov951/blog-aggregator-ts.git"
+  },
+  "keywords": [
+    "blog",
+    "aggregator",
+    "typescript",
+    "nodejs"
+  ],
+  "author": "Georgi Pavlov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gpavlov951/blog-aggregator-ts/issues"
+  },
+  "homepage": "https://github.com/gpavlov951/blog-aggregator-ts#readme",
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
