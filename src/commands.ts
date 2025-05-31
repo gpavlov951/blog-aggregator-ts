@@ -1,40 +1,84 @@
 import { setUser } from "./config";
+import { createUser, getUserByName } from "./lib/db/queries/users";
+
+export type Command = "login" | "register";
 
 // Command handler type definition
-export type CommandHandler = (cmdName: string, ...args: string[]) => void;
+export type CommandHandler = (
+  cmdName: Command,
+  ...args: string[]
+) => Promise<void>;
 
 // Command registry type using Record utility type
-export type CommandsRegistry = Record<string, CommandHandler>;
+export type CommandsRegistry = Record<Command, CommandHandler>;
 
 // Login command handler
-export function handlerLogin(cmdName: string, ...args: string[]): void {
+export async function handlerLogin(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
   if (args.length === 0) {
     throw new Error("Login command requires a username argument");
   }
 
   const username = args[0];
+
+  // Check if user exists
+  const user = await getUserByName(username);
+  if (!user) {
+    throw new Error(`User "${username}" does not exist`);
+  }
+
   setUser(username);
   console.log(`User set to: ${username}`);
+}
+
+// Register command handler
+export async function handlerRegister(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
+  if (args.length === 0) {
+    throw new Error("Register command requires a username argument");
+  }
+
+  const username = args[0];
+
+  // Check if user already exists
+  const existingUser = await getUserByName(username);
+  if (existingUser) {
+    throw new Error(`User with name "${username}" already exists`);
+  }
+
+  // Create new user
+  const newUser = await createUser(username);
+
+  // Set as current user
+  setUser(username);
+
+  // Print success message and user data
+  console.log(`User "${username}" created successfully!`);
+  console.log("User data:", newUser);
 }
 
 // Register a new command
 export function registerCommand(
   registry: CommandsRegistry,
-  cmdName: string,
+  cmdName: Command,
   handler: CommandHandler
 ): void {
   registry[cmdName] = handler;
 }
 
 // Run a command
-export function runCommand(
+export async function runCommand(
   registry: CommandsRegistry,
-  cmdName: string,
+  cmdName: Command,
   ...args: string[]
-): void {
+): Promise<void> {
   const handler = registry[cmdName];
   if (!handler) {
     throw new Error(`Unknown command: ${cmdName}`);
   }
-  handler(cmdName, ...args);
+  await handler(cmdName, ...args);
 }

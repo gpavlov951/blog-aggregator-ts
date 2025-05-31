@@ -3,15 +3,18 @@ import {
   registerCommand,
   runCommand,
   handlerLogin,
+  handlerRegister,
+  Command,
 } from "./commands";
 
-function main() {
+async function main() {
   try {
     // Create command registry
-    const registry: CommandsRegistry = {};
+    const registry = {} as CommandsRegistry;
 
     // Register commands
     registerCommand(registry, "login", handlerLogin);
+    registerCommand(registry, "register", handlerRegister);
 
     // Get command line arguments, removing node and script path
     const args = process.argv.slice(2);
@@ -26,7 +29,9 @@ function main() {
     const [cmdName, ...cmdArgs] = args;
 
     // Run the command
-    runCommand(registry, cmdName, ...cmdArgs);
+    await runCommand(registry, cmdName as Command, ...cmdArgs);
+
+    process.exit(0);
   } catch (error) {
     console.error(
       "Error:",
