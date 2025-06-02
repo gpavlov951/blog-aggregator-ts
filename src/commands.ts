@@ -5,7 +5,7 @@ import {
   deleteAllUsers,
   getUsers,
 } from "./lib/db/queries/users";
-import { createFeed } from "./lib/db/queries/feeds";
+import { createFeed, getAllFeedsWithUsers } from "./lib/db/queries/feeds";
 import { printFeed } from "./lib/helpers";
 import { fetchFeed } from "./feed";
 
@@ -15,7 +15,8 @@ export type Command =
   | "reset"
   | "users"
   | "agg"
-  | "addfeed";
+  | "addfeed"
+  | "feeds";
 
 // Command handler type definition
 export type CommandHandler = (
@@ -161,6 +162,33 @@ export async function handlerAddFeed(
         error instanceof Error ? error.message : String(error)
       }`
     );
+  }
+}
+
+// List feeds command handler
+export async function handlerFeeds(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
+  if (args.length > 0) {
+    throw new Error(`${cmdName} command takes no arguments`);
+  }
+
+  const feedsWithUsers = await getAllFeedsWithUsers();
+
+  if (feedsWithUsers.length === 0) {
+    console.log("No feeds found in the database.");
+    return;
+  }
+
+  console.log("Feeds in the database:");
+  console.log("----------------------");
+
+  for (const { feed, user } of feedsWithUsers) {
+    console.log(`* Name: ${feed.name}`);
+    console.log(`* URL: ${feed.url}`);
+    console.log(`* Created by: ${user?.name ?? "Unknown"}`);
+    console.log("----------------------");
   }
 }
 
