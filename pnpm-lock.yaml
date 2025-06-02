@@ -11,6 +11,9 @@ importers:
       drizzle-orm:
         specifier: ^0.44.1
         version: 0.44.1(postgres@3.4.7)
+      fast-xml-parser:
+        specifier: ^5.2.3
+        version: 5.2.3
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -449,6 +452,10 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  fast-xml-parser@5.2.3:
+    resolution: {integrity: sha512-OdCYfRqfpuLUFonTNjvd30rCBZUneHpSQkCqfaeWQ9qrKcl6XlWeDBNVwGb+INAIxRshuN2jF+BE0L6gbBO2mw==}
+    hasBin: true
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -473,6 +480,9 @@ packages:
   source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+
+  strnum@2.1.1:
+    resolution: {integrity: sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw==}
 
   tsx@4.19.4:
     resolution: {integrity: sha512-gK5GVzDkJK1SI1zwHf32Mqxf2tSJkNx+eYcNly5+nHvWqXUJYUkWBQtKauoESz3ymezAI++ZwT855x5p5eop+Q==}
@@ -725,6 +735,10 @@ snapshots:
       '@esbuild/win32-ia32': 0.25.5
       '@esbuild/win32-x64': 0.25.5
 
+  fast-xml-parser@5.2.3:
+    dependencies:
+      strnum: 2.1.1
+
   fsevents@2.3.3:
     optional: true
 
@@ -744,6 +758,8 @@ snapshots:
       source-map: 0.6.1
 
   source-map@0.6.1: {}
+
+  strnum@2.1.1: {}
 
   tsx@4.19.4:
     dependencies:

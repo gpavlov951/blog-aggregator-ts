@@ -5,8 +5,9 @@ import {
   deleteAllUsers,
   getUsers,
 } from "./lib/db/queries/users";
+import { fetchFeed } from "./feed";
 
-export type Command = "login" | "register" | "reset" | "users";
+export type Command = "login" | "register" | "reset" | "users" | "agg";
 
 // Command handler type definition
 export type CommandHandler = (
@@ -95,6 +96,23 @@ export async function handlerUsers(
     const isCurrent = user.name === currentUser;
     console.log(`* ${user.name}${isCurrent ? " (current)" : ""}`);
   });
+}
+
+// Agg command handler
+export async function handlerAgg(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
+  try {
+    const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
+    console.log(JSON.stringify(feed, null, 2));
+  } catch (error) {
+    throw new Error(
+      `Failed to fetch feed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 }
 
 // Register a new command

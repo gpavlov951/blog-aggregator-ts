@@ -6,6 +6,7 @@ import {
   handlerRegister,
   handlerReset,
   handlerUsers,
+  handlerAgg,
   Command,
 } from "./commands";
 
@@ -19,6 +20,7 @@ async function main() {
     registerCommand(registry, "register", handlerRegister);
     registerCommand(registry, "reset", handlerReset);
     registerCommand(registry, "users", handlerUsers);
+    registerCommand(registry, "agg", handlerAgg);
 
     // Get command line arguments, removing node and script path
     const args = process.argv.slice(2);
