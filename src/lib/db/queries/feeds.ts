@@ -15,6 +15,11 @@ export async function getFeedsByUserId(userId: string) {
   return result;
 }
 
+export async function getFeedByUrl(url: string) {
+  const [result] = await db.select().from(feeds).where(eq(feeds.url, url));
+  return result;
+}
+
 export async function deleteAllFeeds() {
   const result = await db.delete(feeds);
   return result;
