@@ -1,11 +1,12 @@
-import { setUser } from "./config";
+import { setUser, getCurrentUser } from "./config";
 import {
   createUser,
   getUserByName,
   deleteAllUsers,
+  getUsers,
 } from "./lib/db/queries/users";
 
-export type Command = "login" | "register" | "reset";
+export type Command = "login" | "register" | "reset" | "users";
 
 // Command handler type definition
 export type CommandHandler = (
@@ -80,6 +81,20 @@ export async function handlerReset(
       }`
     );
   }
+}
+
+// Users command handler
+export async function handlerUsers(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
+  const users = await getUsers();
+  const currentUser = getCurrentUser();
+
+  users.forEach((user) => {
+    const isCurrent = user.name === currentUser;
+    console.log(`* ${user.name}${isCurrent ? " (current)" : ""}`);
+  });
 }
 
 // Register a new command

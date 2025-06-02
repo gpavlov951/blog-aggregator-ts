@@ -92,3 +92,12 @@ export function readConfig(): Config {
     );
   }
 }
+
+export function getCurrentUser(): string | undefined {
+  try {
+    const config = readConfig();
+    return config.currentUserName;
+  } catch (error) {
+    return undefined;
+  }
+}
