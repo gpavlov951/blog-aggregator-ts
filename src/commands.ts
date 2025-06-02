@@ -2,6 +2,7 @@ import { getCurrentUser, setUser } from "./config";
 import { fetchFeed } from "./feed";
 import {
   createFeedFollow,
+  deleteFeedFollow,
   getFeedFollowsForUser,
 } from "./lib/db/queries/feed-follows";
 import {
@@ -27,7 +28,8 @@ export type Command =
   | "addfeed"
   | "feeds"
   | "follow"
-  | "following";
+  | "following"
+  | "unfollow";
 
 // Command registry type using Record utility type
 export type CommandsRegistry = Record<Command, CommandHandler>;
@@ -235,6 +237,30 @@ export const handlerFollowing: UserCommandHandler = async (
   console.log("------------------------");
   for (const follow of feedFollows) {
     console.log(`* ${follow.feedName}`);
+  }
+};
+
+// Unfollow command handler
+export const handlerUnfollow: UserCommandHandler = async (
+  cmdName: Command,
+  user: User,
+  ...args: string[]
+): Promise<void> => {
+  if (args.length !== 1) {
+    throw new Error(`${cmdName} command requires a url argument`);
+  }
+
+  const url = args[0];
+
+  try {
+    await deleteFeedFollow(user.id, url);
+    console.log(`Successfully unfollowed feed with URL: ${url}`);
+  } catch (error) {
+    throw new Error(
+      `Failed to unfollow feed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
   }
 };
 
