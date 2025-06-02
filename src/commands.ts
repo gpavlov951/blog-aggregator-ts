@@ -1,21 +1,22 @@
-import { setUser, getCurrentUser } from "./config";
+import { getCurrentUser, setUser } from "./config";
+import { fetchFeed } from "./feed";
 import {
-  createUser,
-  getUserByName,
-  deleteAllUsers,
-  getUsers,
-} from "./lib/db/queries/users";
+  createFeedFollow,
+  getFeedFollowsForUser,
+} from "./lib/db/queries/feed-follows";
 import {
   createFeed,
   getAllFeedsWithUsers,
   getFeedByUrl,
 } from "./lib/db/queries/feeds";
 import {
-  createFeedFollow,
-  getFeedFollowsForUser,
-} from "./lib/db/queries/feed-follows";
-import { printFeed } from "./lib/helpers";
-import { fetchFeed } from "./feed";
+  createUser,
+  deleteAllUsers,
+  getUserByName,
+  getUsers,
+} from "./lib/db/queries/users";
+import { User } from "./lib/schema";
+import { CommandHandler, UserCommandHandler } from "./middleware";
 
 export type Command =
   | "login"
@@ -28,20 +29,11 @@ export type Command =
   | "follow"
   | "following";
 
-// Command handler type definition
-export type CommandHandler = (
-  cmdName: Command,
-  ...args: string[]
-) => Promise<void>;
-
 // Command registry type using Record utility type
 export type CommandsRegistry = Record<Command, CommandHandler>;
 
 // Login command handler
-export async function handlerLogin(
-  cmdName: Command,
-  ...args: string[]
-): Promise<void> {
+export async function handlerLogin(...args: string[]): Promise<void> {
   if (args.length === 0) {
     throw new Error("Login command requires a username argument");
   }
@@ -59,10 +51,7 @@ export async function handlerLogin(
 }
 
 // Register command handler
-export async function handlerRegister(
-  cmdName: Command,
-  ...args: string[]
-): Promise<void> {
+export async function handlerRegister(...args: string[]): Promise<void> {
   if (args.length === 0) {
     throw new Error("Register command requires a username argument");
   }
@@ -87,10 +76,7 @@ export async function handlerRegister(
 }
 
 // Reset command handler
-export async function handlerReset(
-  cmdName: Command,
-  ...args: string[]
-): Promise<void> {
+export async function handlerReset(): Promise<void> {
   try {
     await deleteAllUsers();
     console.log("Database reset successful - all users have been deleted");
@@ -104,10 +90,7 @@ export async function handlerReset(
 }
 
 // Users command handler
-export async function handlerUsers(
-  cmdName: Command,
-  ...args: string[]
-): Promise<void> {
+export async function handlerUsers(): Promise<void> {
   const users = await getUsers();
   const currentUser = getCurrentUser();
 
@@ -118,10 +101,7 @@ export async function handlerUsers(
 }
 
 // Agg command handler
-export async function handlerAgg(
-  cmdName: Command,
-  ...args: string[]
-): Promise<void> {
+export async function handlerAgg(): Promise<void> {
   try {
     const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
     console.log(JSON.stringify(feed, null, 2));
@@ -135,26 +115,16 @@ export async function handlerAgg(
 }
 
 // Add feed command handler
-export async function handlerAddFeed(
+export const handlerAddFeed: UserCommandHandler = async (
   cmdName: Command,
+  user: User,
   ...args: string[]
-): Promise<void> {
+): Promise<void> => {
   if (args.length < 2) {
     throw new Error(`${cmdName} command requires name and url arguments`);
   }
 
   const [name, url] = args;
-  const currentUsername = getCurrentUser();
-
-  if (!currentUsername) {
-    throw new Error("No user is currently logged in. Please login first.");
-  }
-
-  // Get the current user from the database
-  const user = await getUserByName(currentUsername);
-  if (!user) {
-    throw new Error(`Current user "${currentUsername}" not found in database`);
-  }
 
   try {
     // Create the feed
@@ -177,7 +147,7 @@ export async function handlerAddFeed(
       }`
     );
   }
-}
+};
 
 // List feeds command handler
 export async function handlerFeeds(
@@ -207,26 +177,16 @@ export async function handlerFeeds(
 }
 
 // Follow command handler
-export async function handlerFollow(
+export const handlerFollow: UserCommandHandler = async (
   cmdName: Command,
+  user: User,
   ...args: string[]
-): Promise<void> {
+): Promise<void> => {
   if (args.length !== 1) {
     throw new Error(`${cmdName} command requires a url argument`);
   }
 
   const url = args[0];
-  const currentUsername = getCurrentUser();
-
-  if (!currentUsername) {
-    throw new Error("No user is currently logged in. Please login first.");
-  }
-
-  // Get the current user from the database
-  const user = await getUserByName(currentUsername);
-  if (!user) {
-    throw new Error(`Current user "${currentUsername}" not found in database`);
-  }
 
   // Find the feed by URL
   const feed = await getFeedByUrl(url);
@@ -251,26 +211,16 @@ export async function handlerFollow(
       }`
     );
   }
-}
+};
 
 // Following command handler
-export async function handlerFollowing(
+export const handlerFollowing: UserCommandHandler = async (
   cmdName: Command,
+  user: User,
   ...args: string[]
-): Promise<void> {
+): Promise<void> => {
   if (args.length > 0) {
     throw new Error(`${cmdName} command takes no arguments`);
-  }
-
-  const currentUsername = getCurrentUser();
-  if (!currentUsername) {
-    throw new Error("No user is currently logged in. Please login first.");
-  }
-
-  // Get the current user from the database
-  const user = await getUserByName(currentUsername);
-  if (!user) {
-    throw new Error(`Current user "${currentUsername}" not found in database`);
   }
 
   // Get all feeds the user is following
@@ -286,7 +236,7 @@ export async function handlerFollowing(
   for (const follow of feedFollows) {
     console.log(`* ${follow.feedName}`);
   }
-}
+};
 
 // Register a new command
 export function registerCommand(
