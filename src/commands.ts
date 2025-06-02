@@ -1,7 +1,11 @@
 import { setUser } from "./config";
-import { createUser, getUserByName } from "./lib/db/queries/users";
+import {
+  createUser,
+  getUserByName,
+  deleteAllUsers,
+} from "./lib/db/queries/users";
 
-export type Command = "login" | "register";
+export type Command = "login" | "register" | "reset";
 
 // Command handler type definition
 export type CommandHandler = (
@@ -59,6 +63,23 @@ export async function handlerRegister(
   // Print success message and user data
   console.log(`User "${username}" created successfully!`);
   console.log("User data:", newUser);
+}
+
+// Reset command handler
+export async function handlerReset(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
+  try {
+    await deleteAllUsers();
+    console.log("Database reset successful - all users have been deleted");
+  } catch (error) {
+    throw new Error(
+      `Failed to reset database: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 }
 
 // Register a new command
