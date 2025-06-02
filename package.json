@@ -7,7 +7,8 @@
     "dev": "tsx watch ./src/index.ts",
     "start": "tsx ./src/index.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "type": "module",
   "repository": {
@@ -26,15 +27,16 @@
     "url": "https://github.com/gpavlov951/blog-aggregator-ts/issues"
   },
   "homepage": "https://github.com/gpavlov951/blog-aggregator-ts#readme",
+  "dependencies": {
+    "drizzle-orm": "^0.44.1",
+    "fast-xml-parser": "^5.2.3",
+    "postgres": "^3.4.7",
+    "studio": "^0.13.5"
+  },
   "devDependencies": {
     "@types/node": "^22.15.29",
     "drizzle-kit": "^0.31.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
-  },
-  "dependencies": {
-    "drizzle-orm": "^0.44.1",
-    "fast-xml-parser": "^5.2.3",
-    "postgres": "^3.4.7"
   }
 }

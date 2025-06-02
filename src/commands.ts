@@ -5,9 +5,17 @@ import {
   deleteAllUsers,
   getUsers,
 } from "./lib/db/queries/users";
+import { createFeed } from "./lib/db/queries/feeds";
+import { printFeed } from "./lib/helpers";
 import { fetchFeed } from "./feed";
 
-export type Command = "login" | "register" | "reset" | "users" | "agg";
+export type Command =
+  | "login"
+  | "register"
+  | "reset"
+  | "users"
+  | "agg"
+  | "addfeed";
 
 // Command handler type definition
 export type CommandHandler = (
@@ -109,6 +117,47 @@ export async function handlerAgg(
   } catch (error) {
     throw new Error(
       `Failed to fetch feed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
+// Add feed command handler
+export async function handlerAddFeed(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
+  if (args.length < 2) {
+    throw new Error(`${cmdName} command requires name and url arguments`);
+  }
+
+  const [name, url] = args;
+  const currentUsername = getCurrentUser();
+
+  if (!currentUsername) {
+    throw new Error("No user is currently logged in. Please login first.");
+  }
+
+  // Get the current user from the database
+  const user = await getUserByName(currentUsername);
+  if (!user) {
+    throw new Error(`Current user "${currentUsername}" not found in database`);
+  }
+
+  try {
+    // Create the feed
+    const newFeed = await createFeed(name, url, user.id);
+
+    // Print the feed details
+    console.log("Feed created successfully!");
+    printFeed(newFeed, user);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("unique")) {
+      throw new Error(`Feed with URL "${url}" already exists`);
+    }
+    throw new Error(
+      `Failed to create feed: ${
         error instanceof Error ? error.message : String(error)
       }`
     );

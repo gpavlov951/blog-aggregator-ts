@@ -17,6 +17,9 @@ importers:
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
+      studio:
+        specifier: ^0.13.5
+        version: 0.13.5
     devDependencies:
       '@types/node':
         specifier: ^22.15.29
@@ -329,8 +332,19 @@ packages:
   '@types/node@22.15.29':
     resolution: {integrity: sha512-LNdjOkUDlU1RZb8e1kOIUpN1qQUlzGkEtbVNo53vbrwDg5om6oduhm4SiUaPW5ASTXhAiP0jInWG8Qx9fVlOeQ==}
 
+  bluebird@3.7.2:
+    resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
+
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
+
+  debug@2.6.9:
+    resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
 
   debug@4.4.1:
     resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
@@ -464,6 +478,12 @@ packages:
   get-tsconfig@4.10.1:
     resolution: {integrity: sha512-auHyJ4AgMz7vgS8Hp3N6HXSmlMdUyhSUrfBF16w153rxtLIEOE+HGqaBppczZvnHLqQJfiHotCYpNhl0lUROFQ==}
 
+  harmony-proxy@1.0.1:
+    resolution: {integrity: sha512-Fb9dzGn1Fx7BAYqSGg0SPscTB+CBL2YJJfTzdGM0x2zXFP6CaUnEiyjoAw8i+Qsmw9N0TknUJ+stII2pFpXL0g==}
+
+  ms@2.0.0:
+    resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
+
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
@@ -483,6 +503,9 @@ packages:
 
   strnum@2.1.1:
     resolution: {integrity: sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw==}
+
+  studio@0.13.5:
+    resolution: {integrity: sha512-00XlL97dUYaWk7FU+RQ7Pqvd83mWsuTc7cJVY4UYP8znIDTz2cBZ7dIeavWN7bBgMBUevKi9qc85dZlg8gmhFQ==}
 
   tsx@4.19.4:
     resolution: {integrity: sha512-gK5GVzDkJK1SI1zwHf32Mqxf2tSJkNx+eYcNly5+nHvWqXUJYUkWBQtKauoESz3ymezAI++ZwT855x5p5eop+Q==}
@@ -656,7 +679,13 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  bluebird@3.7.2: {}
+
   buffer-from@1.1.2: {}
+
+  debug@2.6.9:
+    dependencies:
+      ms: 2.0.0
 
   debug@4.4.1:
     dependencies:
@@ -746,6 +775,10 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
+  harmony-proxy@1.0.1: {}
+
+  ms@2.0.0: {}
+
   ms@2.1.3: {}
 
   postgres@3.4.7: {}
@@ -760,6 +793,14 @@ snapshots:
   source-map@0.6.1: {}
 
   strnum@2.1.1: {}
+
+  studio@0.13.5:
+    dependencies:
+      bluebird: 3.7.2
+      debug: 2.6.9
+      harmony-proxy: 1.0.1
+    transitivePeerDependencies:
+      - supports-color
 
   tsx@4.19.4:
     dependencies:
