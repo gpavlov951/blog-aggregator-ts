@@ -18,8 +18,7 @@ type RSSFeed = {
   };
 };
 
-export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
-  // Fetch the feed data
+async function fetchFeed(feedURL: string): Promise<RSSFeed> {
   const response = await fetch(feedURL, {
     headers: {
       "User-Agent": "gator",
@@ -32,7 +31,6 @@ export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
 
   const xmlText = await response.text();
 
-  // Parse the XML
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
@@ -40,19 +38,16 @@ export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
 
   const parsedData = parser.parse(xmlText);
 
-  // Extract the channel field
   const channel = parsedData.rss?.channel;
   if (!channel) {
     throw new Error("Invalid RSS feed: missing channel element");
   }
 
-  // Extract metadata
   const { title, link, description } = channel;
   if (!title || !link || !description) {
     throw new Error("Invalid RSS feed: missing required channel metadata");
   }
 
-  // Extract feed items
   let items: RSSItem[] = [];
   const rawItems = channel.item;
 
@@ -72,7 +67,6 @@ export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
       .filter((item): item is RSSItem => item !== null);
   }
 
-  // Assemble and return the result
   return {
     channel: {
       title,
@@ -85,10 +79,8 @@ export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
 
 function parsePublishedDate(pubDateStr: string): Date | null {
   try {
-    // Try parsing the date string directly
     const date = new Date(pubDateStr);
 
-    // Check if the date is valid
     if (isNaN(date.getTime())) {
       console.warn(`Invalid date format: ${pubDateStr}`);
       return null;
@@ -103,7 +95,6 @@ function parsePublishedDate(pubDateStr: string): Date | null {
 
 export async function scrapeFeeds() {
   try {
-    // Get the next feed to fetch from the database
     const nextFeed = await getNextFeedToFetch();
 
     if (!nextFeed) {
@@ -113,13 +104,10 @@ export async function scrapeFeeds() {
 
     console.log(`Scraping feed: ${nextFeed.name} (${nextFeed.url})`);
 
-    // Mark the feed as fetched
     await markFeedFetched(nextFeed.id);
 
-    // Fetch the feed content
     const feedData = await fetchFeed(nextFeed.url);
 
-    // Iterate over the items and save them to the database
     console.log(`Found ${feedData.channel.item.length} items:`);
 
     let savedCount = 0;
@@ -127,17 +115,14 @@ export async function scrapeFeeds() {
 
     for (const item of feedData.channel.item) {
       try {
-        // Check if post already exists
         const existingPost = await getPostByUrl(item.link);
         if (existingPost) {
           skippedCount++;
           continue;
         }
 
-        // Parse the published date
         const publishedAt = parsePublishedDate(item.pubDate);
 
-        // Save the post to the database
         await createPost(
           item.title,
           item.link,
@@ -149,13 +134,11 @@ export async function scrapeFeeds() {
         savedCount++;
         console.log(`Saved: ${item.title}`);
       } catch (error) {
-        // Check if it's a duplicate URL error (unique constraint violation)
         if (error instanceof Error && error.message.includes("unique")) {
           skippedCount++;
           continue;
         }
 
-        // Log other errors but continue processing
         console.error(`Error saving post "${item.title}":`, error);
       }
     }

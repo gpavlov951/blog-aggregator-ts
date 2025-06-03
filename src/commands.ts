@@ -33,10 +33,8 @@ export type Command =
   | "unfollow"
   | "browse";
 
-// Command registry type using Record utility type
 export type CommandsRegistry = Record<Command, CommandHandler>;
 
-// Login command handler
 export async function handlerLogin(
   cmdName: Command,
   ...args: string[]
@@ -47,7 +45,6 @@ export async function handlerLogin(
 
   const username = args[0];
 
-  // Check if user exists
   const user = await getUserByName(username);
   if (!user) {
     throw new Error(`User "${username}" does not exist`);
@@ -57,7 +54,6 @@ export async function handlerLogin(
   console.log(`User set to: ${username}`);
 }
 
-// Register command handler
 export async function handlerRegister(
   cmdName: Command,
   ...args: string[]
@@ -68,24 +64,19 @@ export async function handlerRegister(
 
   const username = args[0];
 
-  // Check if user already exists
   const existingUser = await getUserByName(username);
   if (existingUser) {
     throw new Error(`User with name "${username}" already exists`);
   }
 
-  // Create new user
   const newUser = await createUser(username);
 
-  // Set as current user
   setUser(username);
 
-  // Print success message and user data
   console.log(`User "${username}" created successfully!`);
   console.log("User data:", newUser);
 }
 
-// Reset command handler
 export async function handlerReset(): Promise<void> {
   try {
     await deleteAllUsers();
@@ -99,7 +90,6 @@ export async function handlerReset(): Promise<void> {
   }
 }
 
-// Users command handler
 export async function handlerUsers(): Promise<void> {
   const users = await getUsers();
   const currentUser = getCurrentUser();
@@ -158,7 +148,6 @@ function handleError(error: unknown): void {
   );
 }
 
-// Agg command handler
 export async function handlerAgg(
   cmdName: Command,
   ...args: string[]
@@ -177,15 +166,12 @@ export async function handlerAgg(
 
     console.log(`Collecting feeds every ${formattedDuration}`);
 
-    // Start the loop immediately
     scrapeFeeds().catch(handleError);
 
-    // Set up the interval
     const interval = setInterval(() => {
       scrapeFeeds().catch(handleError);
     }, timeBetweenRequests);
 
-    // Handle graceful shutdown
     await new Promise<void>((resolve) => {
       process.on("SIGINT", () => {
         console.log("Shutting down feed aggregator...");
@@ -202,7 +188,6 @@ export async function handlerAgg(
   }
 }
 
-// Add feed command handler
 export const handlerAddFeed: UserCommandHandler = async (
   cmdName: Command,
   user: User,
@@ -215,13 +200,10 @@ export const handlerAddFeed: UserCommandHandler = async (
   const [name, url] = args;
 
   try {
-    // Create the feed
     const newFeed = await createFeed(name, url, user.id);
 
-    // Create a feed follow record for the creator
     const feedFollow = await createFeedFollow(user.id, newFeed.id);
 
-    // Print the feed details
     console.log("Feed created successfully!");
     console.log(`Following feed: ${feedFollow.feedName}`);
     console.log(`User: ${feedFollow.userName}`);
@@ -237,7 +219,6 @@ export const handlerAddFeed: UserCommandHandler = async (
   }
 };
 
-// List feeds command handler
 export async function handlerFeeds(
   cmdName: Command,
   ...args: string[]
@@ -264,7 +245,6 @@ export async function handlerFeeds(
   }
 }
 
-// Follow command handler
 export const handlerFollow: UserCommandHandler = async (
   cmdName: Command,
   user: User,
@@ -276,17 +256,14 @@ export const handlerFollow: UserCommandHandler = async (
 
   const url = args[0];
 
-  // Find the feed by URL
   const feed = await getFeedByUrl(url);
   if (!feed) {
     throw new Error(`Feed with URL "${url}" not found`);
   }
 
   try {
-    // Create the feed follow record
     const feedFollow = await createFeedFollow(user.id, feed.id);
 
-    // Print success message
     console.log(`Following feed: ${feedFollow.feedName}`);
     console.log(`User: ${feedFollow.userName}`);
   } catch (error) {
@@ -301,7 +278,6 @@ export const handlerFollow: UserCommandHandler = async (
   }
 };
 
-// Following command handler
 export const handlerFollowing: UserCommandHandler = async (
   cmdName: Command,
   user: User,
@@ -311,7 +287,6 @@ export const handlerFollowing: UserCommandHandler = async (
     throw new Error(`${cmdName} command takes no arguments`);
   }
 
-  // Get all feeds the user is following
   const feedFollows = await getFeedFollowsForUser(user.id);
 
   if (feedFollows.length === 0) {
@@ -326,7 +301,6 @@ export const handlerFollowing: UserCommandHandler = async (
   }
 };
 
-// Unfollow command handler
 export const handlerUnfollow: UserCommandHandler = async (
   cmdName: Command,
   user: User,
@@ -350,7 +324,6 @@ export const handlerUnfollow: UserCommandHandler = async (
   }
 };
 
-// Browse command handler
 export const handlerBrowse: UserCommandHandler = async (
   cmdName: Command,
   user: User,
@@ -360,7 +333,7 @@ export const handlerBrowse: UserCommandHandler = async (
     throw new Error(`${cmdName} command takes at most one argument (limit)`);
   }
 
-  let limit = 2; // Default limit
+  let limit = 2;
 
   if (args.length === 1) {
     const parsedLimit = parseInt(args[0], 10);
@@ -404,7 +377,6 @@ export const handlerBrowse: UserCommandHandler = async (
   }
 };
 
-// Register a new command
 export function registerCommand(
   registry: CommandsRegistry,
   cmdName: Command,
@@ -413,7 +385,6 @@ export function registerCommand(
   registry[cmdName] = handler;
 }
 
-// Run a command
 export async function runCommand(
   registry: CommandsRegistry,
   cmdName: Command,
