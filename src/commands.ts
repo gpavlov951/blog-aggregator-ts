@@ -10,6 +10,7 @@ import {
   getAllFeedsWithUsers,
   getFeedByUrl,
 } from "./lib/db/queries/feeds";
+import { getPostsForUser } from "./lib/db/queries/posts";
 import {
   createUser,
   deleteAllUsers,
@@ -29,7 +30,8 @@ export type Command =
   | "feeds"
   | "follow"
   | "following"
-  | "unfollow";
+  | "unfollow"
+  | "browse";
 
 // Command registry type using Record utility type
 export type CommandsRegistry = Record<Command, CommandHandler>;
@@ -342,6 +344,60 @@ export const handlerUnfollow: UserCommandHandler = async (
   } catch (error) {
     throw new Error(
       `Failed to unfollow feed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+};
+
+// Browse command handler
+export const handlerBrowse: UserCommandHandler = async (
+  cmdName: Command,
+  user: User,
+  ...args: string[]
+): Promise<void> => {
+  if (args.length > 1) {
+    throw new Error(`${cmdName} command takes at most one argument (limit)`);
+  }
+
+  let limit = 2; // Default limit
+
+  if (args.length === 1) {
+    const parsedLimit = parseInt(args[0], 10);
+    if (isNaN(parsedLimit) || parsedLimit <= 0) {
+      throw new Error("Limit must be a positive number");
+    }
+    limit = parsedLimit;
+  }
+
+  try {
+    const postsWithFeeds = await getPostsForUser(user.id, limit);
+
+    if (postsWithFeeds.length === 0) {
+      console.log(
+        "No posts found. You might not be following any feeds, or the feeds you follow don't have any posts yet."
+      );
+      return;
+    }
+
+    console.log(`Latest ${postsWithFeeds.length} posts:`);
+    console.log("=".repeat(50));
+
+    for (const { post, feed } of postsWithFeeds) {
+      console.log(`Title: ${post.title}`);
+      console.log(`URL: ${post.url}`);
+      console.log(`Feed: ${feed.name}`);
+      if (post.description) {
+        console.log(`Description: ${post.description}`);
+      }
+      if (post.publishedAt) {
+        console.log(`Published: ${post.publishedAt.toLocaleString()}`);
+      }
+      console.log("-".repeat(30));
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to browse posts: ${
         error instanceof Error ? error.message : String(error)
       }`
     );

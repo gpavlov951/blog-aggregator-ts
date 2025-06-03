@@ -3,6 +3,7 @@ import {
   CommandsRegistry,
   handlerAddFeed,
   handlerAgg,
+  handlerBrowse,
   handlerFeeds,
   handlerFollow,
   handlerFollowing,
@@ -36,6 +37,7 @@ async function main() {
       middlewareLoggedIn(handlerFollowing)
     );
     registerCommand(registry, "unfollow", middlewareLoggedIn(handlerUnfollow));
+    registerCommand(registry, "browse", middlewareLoggedIn(handlerBrowse));
 
     // Get command line arguments, removing node and script path
     const args = process.argv.slice(2);

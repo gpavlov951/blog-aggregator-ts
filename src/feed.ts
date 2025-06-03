@@ -1,5 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import { getNextFeedToFetch, markFeedFetched } from "./lib/db/queries/feeds";
+import { createPost, getPostByUrl } from "./lib/db/queries/posts";
 
 type RSSItem = {
   title: string;
@@ -82,6 +83,24 @@ export async function fetchFeed(feedURL: string): Promise<RSSFeed> {
   };
 }
 
+function parsePublishedDate(pubDateStr: string): Date | null {
+  try {
+    // Try parsing the date string directly
+    const date = new Date(pubDateStr);
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn(`Invalid date format: ${pubDateStr}`);
+      return null;
+    }
+
+    return date;
+  } catch (error) {
+    console.warn(`Error parsing date "${pubDateStr}":`, error);
+    return null;
+  }
+}
+
 export async function scrapeFeeds() {
   try {
     // Get the next feed to fetch from the database
@@ -100,11 +119,50 @@ export async function scrapeFeeds() {
     // Fetch the feed content
     const feedData = await fetchFeed(nextFeed.url);
 
-    // Iterate over the items and print their titles
+    // Iterate over the items and save them to the database
     console.log(`Found ${feedData.channel.item.length} items:`);
-    feedData.channel.item.forEach((item, index) => {
-      console.log(`${index + 1}. ${item.title}`);
-    });
+
+    let savedCount = 0;
+    let skippedCount = 0;
+
+    for (const item of feedData.channel.item) {
+      try {
+        // Check if post already exists
+        const existingPost = await getPostByUrl(item.link);
+        if (existingPost) {
+          skippedCount++;
+          continue;
+        }
+
+        // Parse the published date
+        const publishedAt = parsePublishedDate(item.pubDate);
+
+        // Save the post to the database
+        await createPost(
+          item.title,
+          item.link,
+          item.description,
+          publishedAt,
+          nextFeed.id
+        );
+
+        savedCount++;
+        console.log(`Saved: ${item.title}`);
+      } catch (error) {
+        // Check if it's a duplicate URL error (unique constraint violation)
+        if (error instanceof Error && error.message.includes("unique")) {
+          skippedCount++;
+          continue;
+        }
+
+        // Log other errors but continue processing
+        console.error(`Error saving post "${item.title}":`, error);
+      }
+    }
+
+    console.log(
+      `Scraping complete: ${savedCount} posts saved, ${skippedCount} posts skipped (already exist)`
+    );
   } catch (error) {
     console.error("Error scraping feed:", error);
   }
