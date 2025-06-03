@@ -1,5 +1,5 @@
 import { getCurrentUser, setUser } from "./config";
-import { fetchFeed } from "./feed";
+import { scrapeFeeds } from "./feed";
 import {
   createFeedFollow,
   deleteFeedFollow,
@@ -35,9 +35,12 @@ export type Command =
 export type CommandsRegistry = Record<Command, CommandHandler>;
 
 // Login command handler
-export async function handlerLogin(...args: string[]): Promise<void> {
+export async function handlerLogin(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
   if (args.length === 0) {
-    throw new Error("Login command requires a username argument");
+    throw new Error(`${cmdName} command requires a username argument`);
   }
 
   const username = args[0];
@@ -53,9 +56,12 @@ export async function handlerLogin(...args: string[]): Promise<void> {
 }
 
 // Register command handler
-export async function handlerRegister(...args: string[]): Promise<void> {
+export async function handlerRegister(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
   if (args.length === 0) {
-    throw new Error("Register command requires a username argument");
+    throw new Error(`${cmdName} command requires a username argument`);
   }
 
   const username = args[0];
@@ -102,14 +108,92 @@ export async function handlerUsers(): Promise<void> {
   });
 }
 
+function parseDuration(durationStr: string): number {
+  const regex = /^(\d+)(ms|s|m|h)$/;
+  const match = durationStr.match(regex);
+
+  if (!match) {
+    throw new Error(
+      `Invalid duration format: ${durationStr}. Use format like 1s, 1m, 1h, etc.`
+    );
+  }
+
+  const value = parseInt(match[1]);
+  const unit = match[2];
+
+  switch (unit) {
+    case "ms":
+      return value;
+    case "s":
+      return value * 1000;
+    case "m":
+      return value * 60 * 1000;
+    case "h":
+      return value * 60 * 60 * 1000;
+    default:
+      throw new Error(`Unsupported time unit: ${unit}`);
+  }
+}
+
+function formatDuration(milliseconds: number): string {
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (hours > 0) {
+    return `${hours}h${minutes % 60}m${seconds % 60}s`;
+  } else if (minutes > 0) {
+    return `${minutes}m${seconds % 60}s`;
+  } else {
+    return `${seconds}s`;
+  }
+}
+
+function handleError(error: unknown): void {
+  console.error(
+    "Error during feed scraping:",
+    error instanceof Error ? error.message : String(error)
+  );
+}
+
 // Agg command handler
-export async function handlerAgg(): Promise<void> {
+export async function handlerAgg(
+  cmdName: Command,
+  ...args: string[]
+): Promise<void> {
+  if (args.length !== 1) {
+    throw new Error(
+      `${cmdName} command requires a time_between_reqs argument (e.g., 1s, 1m, 1h)`
+    );
+  }
+
+  const durationStr = args[0];
+
   try {
-    const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
-    console.log(JSON.stringify(feed, null, 2));
+    const timeBetweenRequests = parseDuration(durationStr);
+    const formattedDuration = formatDuration(timeBetweenRequests);
+
+    console.log(`Collecting feeds every ${formattedDuration}`);
+
+    // Start the loop immediately
+    scrapeFeeds().catch(handleError);
+
+    // Set up the interval
+    const interval = setInterval(() => {
+      scrapeFeeds().catch(handleError);
+    }, timeBetweenRequests);
+
+    // Handle graceful shutdown
+    await new Promise<void>((resolve) => {
+      process.on("SIGINT", () => {
+        console.log("Shutting down feed aggregator...");
+        clearInterval(interval);
+        resolve();
+      });
+    });
   } catch (error) {
     throw new Error(
-      `Failed to fetch feed: ${
+      `Failed to start feed aggregation: ${
         error instanceof Error ? error.message : String(error)
       }`
     );
