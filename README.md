@@ -188,8 +188,6 @@ pnpm run start browse 5
 
 ### Available Scripts
 
-- `pnpm run dev` - Run in development mode with hot reload
-- `pnpm run start` - Run in production mode
 - `pnpm run db:generate` - Generate database migrations
 - `pnpm run db:migrate` - Run database migrations
 - `pnpm run db:studio` - Open Drizzle Studio
